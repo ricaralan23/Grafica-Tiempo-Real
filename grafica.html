@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>EJEMPLO</title>
+		<script src="http://nortelabs.com/jquery.js"></script>
+		<script src="/js/highcharts.js"></script>
+		<script src="/js/gray.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+		
+		var chart1;
+
+		var votos = [0,0,0];
+
+		var socket = io.connect('127.0.0.1');
+
+		socket.on('votoRecibido', function(voto){
+			var votosViejos = chart1.series[0].data[voto].y;
+			chart1.series[0].data[voto].update(votosViejos + 1);
+		});
+
+		var votar = function(){
+			var voto = $('input[@name="genderS"]:checked').val(); 
+			socket.emit('enviarVoto', {voto: voto});
+		};
+
+		socket.on('votacion', function(datos){
+			for(var i in datos){
+			    chart1.series[0].data[i].update(datos[i]);
+			}
+			
+		});
+
+		var carregarVotacao = function(){
+			socket.emit('recibirVotos');
+		}
+
+		$(document).ready(function() {
+
+			carregarVotacao();
+
+		    chart1 = new Highcharts.Chart({
+		     chart: {
+		        renderTo: 'grafiquita',
+		        type: 'line',
+		        height: 350,
+		     },
+		     title: {
+		        text: 'EJEMPLO'
+		     },
+		     yAxis: {
+		        categories: ['0', '1', '2']
+		     },
+		     xAxis: {
+		       title: {
+		           text: 'Total de Votos'
+		        }
+		     },
+		     series: [{
+		        name: 'Votos',
+		        data: votos
+		     }]
+			 });
+		});
+
+		</script>
+    </head>
+    <body>
+    	<div id="grafiquita" class="grafica"></div>
+    	<input type="radio" name="colorsito" value="0">ROJO</input>
+    	<input type="radio" name="colorsito" value="1">VERDE</input>
+	<input type="radio" name="colorsito" value="2">AZUL</input>
+    	<button onClick='votar();'>Votar</button>
+    </body>
+</html>    
